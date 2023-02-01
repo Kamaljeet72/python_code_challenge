@@ -4,13 +4,19 @@ from pickle import TRUE
 from sre_constants import SUCCESS
 from flask import Flask, jsonify, render_template, request
 from flask_validate_json import validate_json
-
+from flasgger import Swagger
 import sqlite3
   
 # creating a Flask app
 app = Flask(__name__)
+swagger = Swagger(app)
 
-
+@app.route('/')
+def index():
+    return render_template('flasgger.html',
+                           examples=examples,
+                           version=__version__)
+                        
 def responde_with(data, success = True, message = "SUCCESS"):
     response =  jsonify({
         "success": success,
@@ -61,28 +67,6 @@ def get_weather():
         
         cursor_obj = db.cursor()
         cursor_obj.execute(f'SELECT * FROM WEATHER_DATA {where_clause}')
-        data = cursor_obj.fetchall()
-        data = [ list(row) for row in data ]
-        return responde_with(data);
-
-@app.route('/api/yield/', methods = ['GET'])
-def get_yield():
-    with sqlite3.connect('./test.db') as db:
-        db.row_factory = sqlite3.Row  
-        arguments = request.args
-        where_clauses = []
-        if 'year' in arguments:
-        	date_param = arguments["year"]
-        	where_clauses.append(f"year='{date_param}'")
-        if 'station' in arguments:
-        	station = arguments["station"]
-        	where_clauses.append(f"region='{station}'")
-        where_clause = ""
-        if len(where_clauses):
-        	where_clause =" where " + " and ".join(where_clauses)
-        
-        cursor_obj = db.cursor()
-        cursor_obj.execute(f'SELECT * FROM YIELD {where_clause}')
         data = cursor_obj.fetchall()
         data = [ list(row) for row in data ]
         return responde_with(data);
